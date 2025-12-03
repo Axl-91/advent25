@@ -1,4 +1,3 @@
-# dial_solver.py
 MAX_DIALS = 100
 
 
@@ -12,14 +11,12 @@ def main():
             direction = line[0]
             clicks = int(line[1:])
 
-            for _ in range(clicks):
-                if direction == "L":
-                    dial = (dial - 1) % MAX_DIALS
-                else:
-                    dial = (dial + 1) % MAX_DIALS
-
-                if dial == 0:
-                    password += 1
+            if direction == "L":
+                dial = (dial - clicks) % MAX_DIALS
+            if direction == "R":
+                dial = (dial + clicks) % MAX_DIALS
+            if dial == 0:
+                password += 1
 
     print(password)
     return 0
