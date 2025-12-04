@@ -6,15 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function isIdValid(id: string): boolean {
-  if (id.length % 2 == 0) {
-    const half = id.length / 2;
-
-    const firstHalf = id.substring(0, half);
-    const secondHalf = id.substring(half);
-
-    return (firstHalf !== secondHalf);
-  }
-  return true
+  if (id.length == 1) return true;
+  return !(id + id).slice(1, -1).includes(id);
 }
 
 function getResultFromRanges(ranges: string[]): number {
