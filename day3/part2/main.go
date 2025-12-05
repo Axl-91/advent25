@@ -22,12 +22,24 @@ func getMax(numStr string, first int, last int) (int, int) {
 	return max, maxIdx
 }
 
-func getMaxJoltage(joltageStr string) int {
-	first, firstIdx := getMax(joltageStr, 0, len(joltageStr)-1)
-	second, _ := getMax(joltageStr, firstIdx+1, len(joltageStr))
+func getMaxJoltage(joltageStr string, numLength int) int {
+	maxJoltage := 0
+	oldIdxPos := 0
+	idxPos := 0
+	offset := len(joltageStr) - numLength + 1
 
-	maxJoltage := first*10 + second
-	return maxJoltage
+	for {
+		maxVal, maxIdx := getMax(joltageStr, idxPos, idxPos+offset)
+
+		idxPos = maxIdx + 1
+		maxJoltage = maxJoltage*10 + maxVal
+
+		numLength -= 1
+		offset = len(joltageStr) - (maxIdx - oldIdxPos) - numLength
+		if numLength == 0 {
+			return maxJoltage
+		}
+	}
 }
 
 func main() {
@@ -45,7 +57,7 @@ func main() {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		result += getMaxJoltage(line)
+		result += getMaxJoltage(line, 12)
 	}
 
 	if err := scanner.Err(); err != nil {
