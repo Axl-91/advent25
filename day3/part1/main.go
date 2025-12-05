@@ -7,28 +7,27 @@ import (
 	"os"
 )
 
-func getMaxJoltage(joltageString string) int {
-	first := -1
-	firstIdx := -1
-	second := -1
+func getMax(numStr string, first int, last int) (int, int) {
+	max := -1
+	maxIdx := -1
 
-	for i := 0; i < len(joltageString)-1; i++ {
-		intChr := int(joltageString[i] - '0')
+	for i := first; i < last; i++ {
+		intChr := int(numStr[i] - '0')
 
-		if intChr > first {
-			first = intChr
-			firstIdx = i
+		if intChr > max {
+			max = intChr
+			maxIdx = i
 		}
 	}
+	return max, maxIdx
+}
 
-	for i := firstIdx + 1; i < len(joltageString); i++ {
-		intChr := int(joltageString[i] - '0')
-		if intChr > second {
-			second = intChr
-		}
-	}
+func getMaxJoltage(joltageStr string) int {
+	first, firstIdx := getMax(joltageStr, 0, len(joltageStr)-1)
+	second, _ := getMax(joltageStr, firstIdx+1, len(joltageStr))
 
-	return (first*10 + second)
+	maxJoltage := first*10 + second
+	return maxJoltage
 }
 
 func main() {
