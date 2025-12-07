@@ -44,11 +44,7 @@ defmodule Day4 do
     |> Enum.map(&String.graphemes/1)
   end
 
-  def part1 do
-    file = File.read!("input")
-
-    matrix = create_matrix(file)
-
+  def get_removed_matrix(matrix) do
     rows = length(matrix) - 1
     cols = length(List.first(matrix)) - 1
 
@@ -57,41 +53,39 @@ defmodule Day4 do
         can_be_accessed?(matrix, i, j)
       end
     end
+  end
+
+  def part1 do
+    file = File.read!("input")
+
+    matrix = create_matrix(file)
+
+    get_removed_matrix(matrix)
     |> Enum.sum_by(fn a -> Enum.sum(a) end)
   end
 
   def run_reductions_from_matrix(matrix, total_removed) do
-    rows = length(matrix) - 1
-    cols = length(List.first(matrix)) - 1
-
-    removed =
-      for i <- 0..rows do
-        for j <- 0..cols do
-          can_be_accessed?(matrix, i, j)
-        end
-      end
+    removed = get_removed_matrix(matrix)
 
     amount_removed = removed |> Enum.sum_by(fn a -> Enum.sum(a) end)
 
     if amount_removed == 0 do
       total_removed
     else
-      new_matrix =
-        matrix
+      matrix
+      |> Enum.with_index()
+      |> Enum.map(fn {row, row_idx} ->
+        row
         |> Enum.with_index()
-        |> Enum.map(fn {row, row_idx} ->
-          row
-          |> Enum.with_index()
-          |> Enum.map(fn {val, val_idx} ->
-            if val == "@" and Enum.at(removed, row_idx) |> Enum.at(val_idx) == 1 do
-              "."
-            else
-              val
-            end
-          end)
+        |> Enum.map(fn {val, val_idx} ->
+          if val == "@" and Enum.at(removed, row_idx) |> Enum.at(val_idx) == 1 do
+            "."
+          else
+            val
+          end
         end)
-
-      run_reductions_from_matrix(new_matrix, amount_removed + total_removed)
+      end)
+      |> run_reductions_from_matrix(amount_removed + total_removed)
     end
   end
 
