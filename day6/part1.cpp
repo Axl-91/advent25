@@ -16,16 +16,6 @@ std::vector<std::string> split_whitespaces(const std::string &line) {
   return words;
 }
 
-template <typename T> void print_vec(const std::vector<T> &v) {
-  std::cout << "[";
-  for (size_t i = 0; i < v.size(); i++) {
-    std::cout << v[i];
-    if (i < v.size() - 1)
-      std::cout << ", ";
-  }
-  std::cout << "]\n";
-}
-
 long run_sum(std::vector<std::string> sum) {
   long total = 0;
   
@@ -48,17 +38,14 @@ long run_mult(std::vector<std::string> mult) {
 long run_operations(std::vector<std::vector<std::string>> operations_vector) {
   long total = 0;
   for (std::vector<std::string> operation : operations_vector) {
-    print_vec(operation);
     std::string op = operation.back();
     operation.pop_back();
 
     if (op == "+") {
       long sum = run_sum(operation);
-      std::cout << "Sum total: " << sum << std::endl;
       total += sum;
     } else {
       long mult = run_mult(operation);
-      std::cout << "Mult total: " << mult << std::endl;
       total += mult;
     }
   }
