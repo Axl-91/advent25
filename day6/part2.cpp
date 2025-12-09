@@ -5,17 +5,6 @@
 #include <string>
 #include <vector>
 
-template <typename T> void print_vec(const std::vector<T> &v) {
-  std::cout << "[";
-
-  for (size_t i = 0; i < v.size(); i++) {
-    std::cout << v[i];
-    if (i < v.size() - 1)
-      std::cout << ", ";
-  }
-  std::cout << "]\n";
-}
-
 int count_operations(const std::string &operations_line) {
   std::istringstream stream(operations_line);
   int operations_count = 0;
@@ -70,8 +59,6 @@ void parse_numbers(std::vector<std::vector<long long>> &num_vector,
   int num_position = 0;
 
   for (int i = 0; i < line.size(); i++) {
-    // std::cout << "i -> " << i << std::endl;
-
     if (num_position + 1 < pos_numbers.size() &&
         i == pos_numbers[num_position + 1]) {
       vec_selected++;
@@ -81,18 +68,10 @@ void parse_numbers(std::vector<std::vector<long long>> &num_vector,
     if (line[i] == ' ') {
       continue;
     }
-    // std::cout << "vec_selected -> " << vec_selected << std::endl;
-    // std::cout << "num_position -> " << num_position << std::endl;
-    // std::cout << "new_number -> " << pos_numbers[num_position] << std::endl;
-
     int pos = i - (pos_numbers[num_position]);
     long long new_num = line[i] - '0';
-    // std::cout << "ADD: " << new_num << " | To Vector in [" << vec_selected <<
-    // ", " << pos << "]" << std::endl;
     num_vector[vec_selected][pos] =
         num_vector[vec_selected][pos] * 10 + new_num;
-
-    // print_vec(num_vector[vec_selected]);
   }
 }
 
@@ -116,31 +95,10 @@ void init_pos_numbers(std::string operators_line,
   }
 }
 
-int main() {
-  std::ifstream file("input");
-  if (!file.is_open()) {
-    std::cerr << "Failed to open file\n";
-    return 1;
-  }
-
-  std::vector<std::vector<long long>> numbers;
-  std::vector<int> pos_numbers;
-  std::vector<std::string> operators;
-  std::string line;
-  int line_len;
-
-  std::getline(file, line);
-  int operations_count = count_operations(line);
-
-  while (std::getline(file, line)) {
-    if (line[0] == '*' || line[0] == '+') {
-      operators = parse_operators(line);
-      init_pos_numbers(line, pos_numbers);
-      line_len = line.size();
-    }
-  }
-
-  for (int i = 0; i < operations_count; i++) {
+void init_numbers_vec(std::vector<std::vector<long long>> &numbers,
+                      std::vector<int> pos_numbers, int op_counter,
+                      int line_len) {
+  for (int i = 0; i < op_counter; i++) {
     std::vector<long long> num_vector;
     int next_number =
         (i + 1 < pos_numbers.size()) ? pos_numbers[i + 1] : line_len + 1;
@@ -150,18 +108,43 @@ int main() {
     }
     numbers.push_back(num_vector);
   }
+}
 
-  file.clear();
-  file.seekg(0);
+int main() {
+  std::ifstream file("input");
+  if (!file.is_open()) {
+    std::cerr << "Failed to open file\n";
+    return 1;
+  }
+
+  std::vector<std::string> lines;
+  std::vector<std::vector<long long>> numbers;
+  std::vector<int> pos_numbers;
+  std::vector<std::string> operators;
+  std::string line;
+  int line_len;
+
+  std::getline(file, line);
+  lines.push_back(line);
+
+  int op_counter = count_operations(line);
 
   while (std::getline(file, line)) {
     if (line[0] == '*' || line[0] == '+') {
+      operators = parse_operators(line);
+      init_pos_numbers(line, pos_numbers);
+      line_len = line.size();
       continue;
     }
-    parse_numbers(numbers, pos_numbers, line);
+    lines.push_back(line);
   }
-
   file.close();
+
+  init_numbers_vec(numbers, pos_numbers, op_counter, line_len);
+
+  for (std::string str_line : lines) {
+    parse_numbers(numbers, pos_numbers, str_line);
+  }
 
   long long result = run_operations(numbers, operators);
   std::cout << "Result: " << result << std::endl;
