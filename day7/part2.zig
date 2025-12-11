@@ -10,40 +10,45 @@ fn value_exists(value: usize, array: *std.ArrayList(usize)) bool {
     return false;
 }
 
-fn count_timelines(line_vec: std.ArrayList([]const u8), pos_ray: usize, allocator: std.mem.Allocator) !u32 {
-    var rays_vec: std.ArrayList(usize) = .empty;
-    try rays_vec.append(allocator, pos_ray);
-    defer rays_vec.deinit(allocator);
+fn count_timelines(line_vec: *std.ArrayList([]const u8), pos_ray: usize, allocator: std.mem.Allocator) !u128 {
+    var total: u128 = 0;
 
-    var rays_vec_aux: std.ArrayList(usize) = .empty;
-    defer rays_vec_aux.deinit(allocator);
+    var rays = std.AutoHashMap(usize, u128).init(allocator);
+    defer rays.deinit();
+    try rays.put(pos_ray, 1);
 
-    for (0.., line_vec.items) |i, line| {
-        std.debug.print("I -> {}\n", .{i});
-        if (line_vec.items.len - i == 3) {
-            var total: u32 = 0;
-            for (rays_vec.items) |ray| {
-                if (line_vec.items[i][ray] == '^') total += 2 else total += 1;
+    for (0..line_vec.items.len - 1) |i| {
+        if (line_vec.items.len - i == 2) {
+            var rays_it = rays.iterator();
+            while (rays_it.next()) |entry| {
+                if (entry.value_ptr.* != 0) {
+                    total += entry.value_ptr.*;
+                }
             }
-            return total;
+            break;
         }
+        var rays_it = rays.iterator();
+        while (rays_it.next()) |entry| {
+            const ray = entry.key_ptr.*;
+            const repetitions = entry.value_ptr.*;
+            if (line_vec.items[i][ray] == '^') {
+                if (rays.getPtr(ray + 1)) |ptr| {
+                    ptr.* += repetitions;
+                } else {
+                    try rays.put(ray + 1, repetitions);
+                }
 
-        for (rays_vec.items) |ray| {
-            if (line[ray] == '^') {
-                try rays_vec_aux.append(allocator, ray + 1);
-                try rays_vec_aux.append(allocator, ray - 1);
-            } else {
-                try rays_vec_aux.append(allocator, ray);
+                if (rays.getPtr(ray - 1)) |ptr| {
+                    ptr.* += repetitions;
+                } else {
+                    try rays.put(ray - 1, repetitions);
+                }
+
+                try rays.put(ray, 0);
             }
-        }
-        if (rays_vec_aux.items.len > 0) {
-            rays_vec = .empty;
-            try rays_vec.appendSlice(allocator, rays_vec_aux.items[0..]);
-            rays_vec_aux = .empty;
         }
     }
-
-    return 0;
+    return total;
 }
 
 pub fn main() !void {
@@ -65,7 +70,7 @@ pub fn main() !void {
         try lines_vec.append(allocator, line);
     }
 
-    const timelines: u32 = try count_timelines(lines_vec, pos_ray, allocator);
+    const timelines: u128 = try count_timelines(&lines_vec, pos_ray, allocator);
 
     std.debug.print("Result {}\n", .{timelines});
 }
