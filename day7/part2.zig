@@ -1,15 +1,6 @@
 const std = @import("std");
 const data = @embedFile("input");
 
-fn value_exists(value: usize, array: *std.ArrayList(usize)) bool {
-    for (array.items) |array_value| {
-        if (array_value == value) {
-            return true;
-        }
-    }
-    return false;
-}
-
 fn count_timelines(line_vec: *std.ArrayList([]const u8), pos_ray: usize, allocator: std.mem.Allocator) !u128 {
     var total: u128 = 0;
 
