@@ -25,22 +25,17 @@ def main
 
   distances = distances.sort_by { |list| list[1] }
 
-  (0..1000).each do |i|
+  (0..999).each do |i|
     points = distances[i][0]
 
     pos_left = circuit.find_index { |junction| junction.any?(points[0]) }
     pos_right = circuit.find_index { |junction| junction.any?(points[1]) }
 
     if pos_left && pos_right && pos_left != pos_right
-      left_in_right = circuit[pos_left].any?(points[1])
-      right_in_left = circuit[pos_right].any?(points[0])
-
-      if !left_in_right
-        circuit[pos_left].push(points[1])
-      elsif !right_in_left
-        circuit[pos_right].push(points[0])
-      end
-
+      new_junction = circuit.delete_at(pos_left)
+      pos_right = circuit.find_index { |junction| junction.any?(points[1]) }
+      new_junction |= circuit.delete_at(pos_right)
+      circuit.push(new_junction)
     elsif pos_left && !pos_right
       circuit[pos_left].push(points[1])
     elsif pos_right && !pos_left
