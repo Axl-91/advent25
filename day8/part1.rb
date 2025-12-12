@@ -9,11 +9,8 @@ def calculate_distance(x_str, y_str)
   )
 end
 
-def main
-  result = 1
-  circuit = []
+def initialize_distances_list(points)
   distances = []
-  points = File.readlines('input', chomp: true)
 
   (0..points.size - 2).each do |i|
     main_point = points[i]
@@ -23,27 +20,49 @@ def main
     end
   end
 
-  distances = distances.sort_by { |list| list[1] }
+  distances.sort_by { |list| list[1] }
+end
+
+def unite_junctions(points, pos_left, circuit)
+  new_junction = circuit.delete_at(pos_left)
+  pos_right = circuit.find_index { |junction| junction.any?(points[1]) }
+  new_junction |= circuit.delete_at(pos_right)
+  circuit.push(new_junction)
+end
+
+def unite_points(points, pos_left, pos_right, circuit)
+  if pos_left && pos_right && pos_left != pos_right
+    unite_junctions(points, pos_left, circuit)
+  elsif pos_left && !pos_right
+    circuit[pos_left].push(points[1])
+  elsif pos_right && !pos_left
+    circuit[pos_right].push(points[0])
+  elsif !pos_right && !pos_left
+    circuit.push([points[0], points[1]])
+  end
+end
+
+def create_circuit_and_get_result(distances)
+  circuit = []
 
   (0..999).each do |i|
     points = distances[i][0]
-
     pos_left = circuit.find_index { |junction| junction.any?(points[0]) }
     pos_right = circuit.find_index { |junction| junction.any?(points[1]) }
 
-    if pos_left && pos_right && pos_left != pos_right
-      new_junction = circuit.delete_at(pos_left)
-      pos_right = circuit.find_index { |junction| junction.any?(points[1]) }
-      new_junction |= circuit.delete_at(pos_right)
-      circuit.push(new_junction)
-    elsif pos_left && !pos_right
-      circuit[pos_left].push(points[1])
-    elsif pos_right && !pos_left
-      circuit[pos_right].push(points[0])
-    elsif !pos_right && !pos_left
-      circuit.push([points[0], points[1]])
-    end
+    unite_points(points, pos_left, pos_right, circuit)
   end
+
+  circuit
+end
+
+def main
+  result = 1
+
+  points = File.readlines('input', chomp: true)
+  distances = initialize_distances_list(points)
+
+  circuit = create_circuit_and_get_result(distances)
 
   circuit = circuit.map(&:count).sort.reverse
 

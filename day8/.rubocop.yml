@@ -4,3 +4,9 @@ Style/FrozenStringLiteralComment:
 Metrics/AbcSize:
   Enabled: false
 
+Metrics/CyclomaticComplexity:
+  Max: 20
+
+Metrics/PerceivedComplexity:
+  Max: 20
+  
