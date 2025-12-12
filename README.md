@@ -8,9 +8,8 @@ Most people pick one language, stay focused, write elegant solutions, and finish
 
 Not me.
 
-I'm attempting a completely unreasonable challenge:
+**I'll try to solve each day’s puzzle in a different programming language.**
 
-### Solve each day’s puzzle (maybe?) in a different programming language (until I eventually run out of languages I know or sanity).
 ---
 
 >Will I regret this?
