@@ -25,7 +25,7 @@ Almost guaranteed.
 >
 Yes.
 
-### Why?...
+<h2 align="center">Why?...</h3>
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/4fbbd1f0-7e44-441b-8a3d-f6fa658981c9" alt="Kamille Bidan" width="800" />
