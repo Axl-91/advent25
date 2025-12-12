@@ -1,0 +1,11 @@
+{
+  "name": "axl-91/day9",
+  "description": "Day 9 for AoC",
+  "authors": [
+    {
+      "name": "Axel Aparicio Rotermund",
+      "email": "axelaparicior@gmail.com"
+    }
+  ],
+  "require": {}
+}
