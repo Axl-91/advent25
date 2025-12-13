@@ -25,7 +25,7 @@ function parseLine(line) {
   return [buttons, lightDiagram];
 }
 
-function mergeButtons(ButtonX, ButtonY) {
+function sumButtons(ButtonX, ButtonY) {
   const result = [...[...ButtonX, ...ButtonY].reduce((set, btn) => {
     set.has(btn) ? set.delete(btn) : set.add(btn);
     return set;
@@ -66,9 +66,9 @@ function getMinToggles(buttons, target) {
     let buttonsCombinations = combinationsOfButtons(buttons, minBtn);
 
     for (let buttons of buttonsCombinations) {
-      let attemptButton = buttons.reduce((acc, btn) => mergeButtons(acc, btn), [])
+      let resultButtons = buttons.reduce((acc, btn) => sumButtons(acc, btn), [])
 
-      if (ButtonsEquals(attemptButton, target)) {
+      if (ButtonsEquals(resultButtons, target)) {
         return minBtn;
       }
     }
@@ -83,8 +83,8 @@ function main() {
 
   const minToggles =
     input
-      .map((lineInput, _) =>
-        getMinToggles(lineInput[0], lineInput[1])
+      .map(([buttons, target], _) =>
+        getMinToggles(buttons, target)
       )
 
   const sumToggles =
