@@ -17,12 +17,17 @@ function parseButtons(lineSplitted) {
     .map((list, _) => list.map(Number))
 }
 
+function parseJoltage(lineSplitted) {
+  return lineSplitted.at(-1).replace(/^\{|\}|$/g, "").split(",").map(Number)
+}
+
 function parseLine(line) {
   const lineSplitted = line.split(' ');
   let lightDiagram = parseLightDiagram(lineSplitted);
   let buttons = parseButtons(lineSplitted)
+  let joltage = parseJoltage(lineSplitted)
 
-  return [buttons, lightDiagram];
+  return [buttons, lightDiagram, joltage];
 }
 
 function sumButtons(ButtonX, ButtonY) {
@@ -61,7 +66,8 @@ function combinationsOfButtons(btnArray, len) {
 }
 
 
-function getMinToggles(buttons, target) {
+function getMinToggles(buttons, target, joltageTarget) {
+  let joltage = Array(joltageTarget.flat().length).fill(0);
   for (let minBtn = 1; minBtn <= buttons.length; minBtn++) {
     let buttonsCombinations = combinationsOfButtons(buttons, minBtn);
 
@@ -69,6 +75,10 @@ function getMinToggles(buttons, target) {
       let resultButtons = buttons.reduce((acc, btn) => sumButtons(acc, btn), [])
 
       if (ButtonsEquals(resultButtons, target)) {
+        for (let btn of buttons.flat()) {
+          joltage[btn] += 1;
+        }
+        // console.log(joltage)
         return minBtn;
       }
     }
@@ -78,13 +88,13 @@ function getMinToggles(buttons, target) {
 
 function main() {
   const input =
-    readFileSync("input", "utf-8").trim().split('\n')
+    readFileSync("input_test", "utf-8").trim().split('\n')
       .map((line, _) => parseLine(line));
 
   const minToggles =
     input
-      .map(([buttons, target], _) =>
-        getMinToggles(buttons, target)
+      .map(([buttons, target, joltage], _) =>
+        getMinToggles(buttons, target, joltage)
       )
 
   const sumToggles =
