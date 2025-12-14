@@ -1,6 +1,5 @@
 import { readFileSync } from "fs";
-
-const joltageCache = new Map();
+import { init } from "z3-solver";
 
 function parseLightDiagram(lineSplitted) {
   const lightDiagramStr = lineSplitted[0].replace(/^\[|\]$/g, "")
@@ -79,92 +78,45 @@ function getMinToggles(buttons, target) {
   return -1;
 }
 
-function getTargetJoltage(joltage) {
-  return joltage.reduce(
-    (acc, val, idx) => {
-      if (val % 2 != 0) acc.push(idx)
-      return acc
-    }, [])
+async function getMinJoltage(buttons, joltages, z3Context) {
+  // Create an optimize object from Z3
+  const { Int, Optimize } = z3Context("main");
+  const optimizer = new Optimize();
+
+  // Create a variable for each button
+  const variables = [];
+  buttons.forEach((_, idx) => {
+    const value = Int.const(String.fromCodePoint(idx + 97));
+    optimizer.add(value.ge(0));
+    variables.push(value);
+  });
+
+  // Create conditions for each joltage number
+  joltages.forEach((joltage, jIdx) => {
+    let condition = Int.val(0);
+    buttons.forEach((_, bIdx) => {
+      if (buttons[bIdx].includes(jIdx))
+        condition = condition.add(variables[bIdx]);
+    });
+    condition = condition.eq(Int.val(joltage));
+    optimizer.add(condition);
+  });
+
+  // Create the sum of all z3 Values
+  const sum = variables.reduce((prev, curr) => prev.add(curr));
+
+  optimizer.minimize(sum);
+
+  // If there is a satisfactory result get it and put it into the result
+  if ((await optimizer.check()) == "sat") {
+    let minToggles = parseInt(optimizer.model().eval(sum));
+    return minToggles;
+  }
+
+  return -1
 }
 
-function getNewJoltage(joltage, buttons_combination) {
-  let new_joltage = joltage.slice();
-
-  for (let combination of buttons_combination) {
-    for (let btn of combination) {
-      new_joltage[btn] -= 1;
-    }
-  }
-  return new_joltage;
-}
-
-
-
-function makeKey(buttons, joltage) {
-  const buttonsKey = buttons
-    .map(btn => btn.slice().sort((a, b) => a - b).join(","))
-    .sort()
-    .join("|");
-
-  const joltageKey = joltage.join(",");
-
-  return `${buttonsKey}::${joltageKey}`;
-}
-
-
-function getMinJoltage(buttons, joltage) {
-  const MAX = 900_000_000;
-  const key = makeKey(buttons, joltage);
-  let valueMult = 1
-
-  if (joltageCache.has(key)) {
-    return joltageCache.get(key);
-  }
-
-  if (joltage.every(v => v === 0)) {
-    joltageCache.set(key, 0);
-    return 0;
-  }
-
-  if (joltage.some(b => b < 0)) {
-    joltageCache.set(key, MAX);
-    return MAX;
-  }
-
-  while (joltage.every(b => b % 2 == 0)) {
-    joltage = joltage.map(b => b / 2)
-    valueMult *= 2;
-  }
-
-  let target = getTargetJoltage(joltage);
-  let attempts = [];
-
-  for (let len_btn = 1; len_btn <= buttons.length; len_btn++) {
-    let buttonsCombinations = combinationsOfButtons(buttons, len_btn);
-
-    for (let buttonsComb of buttonsCombinations) {
-      let resultButtons = buttonsComb.reduce((acc, btn) => sumButtons(acc, btn), [])
-
-      if (ButtonsEquals(resultButtons, target)) {
-        let newJoltage = getNewJoltage(joltage, buttonsComb);
-        let minJoltage = getMinJoltage(buttons, newJoltage) + buttonsComb.length;
-        minJoltage *= valueMult
-
-        attempts.push(minJoltage)
-      }
-    }
-  }
-
-  let result = attempts.length === 0 ?
-    MAX
-    : attempts.reduce((prev, curr) => Math.min(prev, curr))
-
-  joltageCache.set(key, result);
-
-  return result;
-}
-
-function main() {
+async function main() {
   const input =
     readFileSync("input", "utf-8").trim().split('\n')
       .map((line, _) => parseLine(line));
@@ -181,17 +133,23 @@ function main() {
 
   console.log(`Part 1: ${sumToggles}`)
 
+  let z3Context = (await init()).Context;
+
   const minTogglesJoltage =
-    input
-      .map(([buttons, _, joltage]) =>
-        getMinJoltage(buttons, joltage)
-      );
+    await Promise.all(input
+      .map(async ([buttons, _, joltage]) =>
+        await getMinJoltage(buttons, joltage, z3Context)
+      ));
 
-  const sumTogglesJoltage =
-    minTogglesJoltage
-      .reduce((acc, value) => acc + value, 0);
+  if (minTogglesJoltage.some(v => v < 0)) {
+    console.log("Fail")
+    return -1
+  }
 
-  console.log(`Part 2: ${sumTogglesJoltage}`)
+  const resultSum = minTogglesJoltage.reduce((x, y) => x + y)
+
+
+  console.log(`Part 2: ${resultSum}`)
 }
 
 main()
