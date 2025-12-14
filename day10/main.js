@@ -1,5 +1,7 @@
 import { readFileSync } from "fs";
 
+const joltageCache = new Map();
+
 function parseLightDiagram(lineSplitted) {
   const lightDiagramStr = lineSplitted[0].replace(/^\[|\]$/g, "")
 
@@ -65,7 +67,6 @@ function combinationsOfButtons(btnArray, len) {
   return result;
 }
 
-
 function getMinToggles(buttons, target) {
   for (let minBtn = 1; minBtn <= buttons.length; minBtn++) {
     let buttonsCombinations = combinationsOfButtons(buttons, minBtn);
@@ -78,29 +79,94 @@ function getMinToggles(buttons, target) {
   return -1;
 }
 
-function getMinTogglesWithJoltage(buttons, target, joltageTarget) {
-  let joltage = Array(joltageTarget.flat().length).fill(0);
-  for (let minBtn = 1; minBtn <= buttons.length; minBtn++) {
-    let buttonsCombinations = combinationsOfButtons(buttons, minBtn);
+function getTargetJoltage(joltage) {
+  return joltage.reduce(
+    (acc, val, idx) => {
+      if (val % 2 != 0) acc.push(idx)
+      return acc
+    }, [])
+}
 
-    for (let buttons of buttonsCombinations) {
-      let resultButtons = buttons.reduce((acc, btn) => sumButtons(acc, btn), [])
+function getNewJoltage(joltage, buttons_combination) {
+  let new_joltage = joltage.slice();
+
+  for (let combination of buttons_combination) {
+    for (let btn of combination) {
+      new_joltage[btn] -= 1;
+    }
+  }
+  return new_joltage;
+}
+
+
+
+function makeKey(buttons, joltage) {
+  const buttonsKey = buttons
+    .map(btn => btn.slice().sort((a, b) => a - b).join(","))
+    .sort()
+    .join("|");
+
+  const joltageKey = joltage.join(",");
+
+  return `${buttonsKey}::${joltageKey}`;
+}
+
+
+function getMinJoltage(buttons, joltage) {
+  const MAX = 900_000_000;
+  const key = makeKey(buttons, joltage);
+  let valueMult = 1
+
+  if (joltageCache.has(key)) {
+    return joltageCache.get(key);
+  }
+
+  if (joltage.every(v => v === 0)) {
+    joltageCache.set(key, 0);
+    return 0;
+  }
+
+  if (joltage.some(b => b < 0)) {
+    joltageCache.set(key, MAX);
+    return MAX;
+  }
+
+  while (joltage.every(b => b % 2 == 0)) {
+    joltage = joltage.map(b => b / 2)
+    valueMult *= 2;
+  }
+
+  let target = getTargetJoltage(joltage);
+  let attempts = [];
+
+  for (let len_btn = 1; len_btn <= buttons.length; len_btn++) {
+    let buttonsCombinations = combinationsOfButtons(buttons, len_btn);
+
+    for (let buttonsComb of buttonsCombinations) {
+      let resultButtons = buttonsComb.reduce((acc, btn) => sumButtons(acc, btn), [])
 
       if (ButtonsEquals(resultButtons, target)) {
-        for (let btn of buttons.flat()) {
-          joltage[btn] += 1;
-        }
-        // console.log(joltage)
-        return minBtn;
+        let newJoltage = getNewJoltage(joltage, buttonsComb);
+        let minJoltage = getMinJoltage(buttons, newJoltage) + buttonsComb.length;
+        minJoltage *= valueMult
+
+        attempts.push(minJoltage)
       }
     }
   }
-  return -1;
+
+  let result = attempts.length === 0 ?
+    MAX
+    : attempts.reduce((prev, curr) => Math.min(prev, curr))
+
+  joltageCache.set(key, result);
+
+  return result;
 }
 
 function main() {
   const input =
-    readFileSync("input_test", "utf-8").trim().split('\n')
+    readFileSync("input", "utf-8").trim().split('\n')
       .map((line, _) => parseLine(line));
 
   const minToggles =
@@ -115,11 +181,17 @@ function main() {
 
   console.log(`Part 1: ${sumToggles}`)
 
-  // const minTogglesWithJoltage =
-  input
-    .map(([buttons, target, joltage], _) =>
-      getMinTogglesWithJoltage(buttons, target, joltage)
-    );
+  const minTogglesJoltage =
+    input
+      .map(([buttons, _, joltage]) =>
+        getMinJoltage(buttons, joltage)
+      );
+
+  const sumTogglesJoltage =
+    minTogglesJoltage
+      .reduce((acc, value) => acc + value, 0);
+
+  console.log(`Part 2: ${sumTogglesJoltage}`)
 }
 
 main()
