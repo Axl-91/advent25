@@ -66,7 +66,19 @@ function combinationsOfButtons(btnArray, len) {
 }
 
 
-function getMinToggles(buttons, target, joltageTarget) {
+function getMinToggles(buttons, target) {
+  for (let minBtn = 1; minBtn <= buttons.length; minBtn++) {
+    let buttonsCombinations = combinationsOfButtons(buttons, minBtn);
+
+    for (let buttons of buttonsCombinations) {
+      let resultButtons = buttons.reduce((acc, btn) => sumButtons(acc, btn), [])
+      if (ButtonsEquals(resultButtons, target)) return minBtn;
+    }
+  }
+  return -1;
+}
+
+function getMinTogglesWithJoltage(buttons, target, joltageTarget) {
   let joltage = Array(joltageTarget.flat().length).fill(0);
   for (let minBtn = 1; minBtn <= buttons.length; minBtn++) {
     let buttonsCombinations = combinationsOfButtons(buttons, minBtn);
@@ -93,15 +105,21 @@ function main() {
 
   const minToggles =
     input
-      .map(([buttons, target, joltage], _) =>
-        getMinToggles(buttons, target, joltage)
+      .map(([buttons, target, _]) =>
+        getMinToggles(buttons, target)
       )
 
   const sumToggles =
     minToggles
       .reduce((acc, value) => acc + value, 0);
 
-  console.log(sumToggles)
+  console.log(`Part 1: ${sumToggles}`)
+
+  // const minTogglesWithJoltage =
+  input
+    .map(([buttons, target, joltage], _) =>
+      getMinTogglesWithJoltage(buttons, target, joltage)
+    );
 }
 
 main()
