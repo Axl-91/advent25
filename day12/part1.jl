@@ -33,6 +33,7 @@ function parse_input(input_name)
     return input_matrixes, dims, values
 end
 
+# Returns all different rotations of matrix
 function rotations(A)
     rots = Matrix{Int}[]
     cur = A
@@ -45,59 +46,57 @@ function rotations(A)
     return rots
 end
 
-function can_place(board, A, r, c)
-    h, w = size(A)
-    for i in 1:h, j in 1:w
-        if A[i, j] == 1 && board[r+i-1, c+j-1] == 1
+# Check if the matrix A can be placed in the board
+function can_place(board, A, x, y)
+    x_max, y_max = size(A)
+    for i in 1:x_max, j in 1:y_max
+        if A[i, j] == 1 && board[x+i-1, y+j-1] == 1
             return false
         end
     end
     return true
 end
 
-function place!(board, A, r, c)
-    h, w = size(A)
-    for i in 1:h, j in 1:w
+function place!(board, A, x, y)
+    x_max, y_max = size(A)
+    for i in 1:x_max, j in 1:y_max
         if A[i, j] == 1
-            board[r+i-1, c+j-1] = 1
+            board[x+i-1, y+j-1] = 1
         end
     end
 end
 
-function remove!(board, A, r, c)
-    h, w = size(A)
-    for i in 1:h, j in 1:w
+function remove!(board, A, x, y)
+    x_max, y_max = size(A)
+    for i in 1:x_max, j in 1:y_max
         if A[i, j] == 1
-            board[r+i-1, c+j-1] = 0
+            board[x+i-1, y+j-1] = 0
         end
     end
 end
 
-function can_place_in_board(board, pieces, cols, rows, idx)
+function can_place_in_board(board, pieces, idx)
     idx > length(pieces) && return true
 
+    rows, cols = size(board)
     A, count = pieces[idx]
     rots = rotations(A)
 
-    if count == 0
-        return can_place_in_board(board, pieces, cols, rows, idx + 1)
-    end
+    count == 0 && return can_place_in_board(board, pieces, idx + 1)
 
     for R in rots
-        h, w = size(R)
-        for r in 1:(rows-h+1),
-            c in 1:(cols-w+1)
-
-            if can_place(board, R, r, c)
-                place!(board, R, r, c)
-
+        x_max, y_max = size(R)
+        # Loop for every valid position
+        # I can place the matrix on the board
+        for x in 1:(rows-x_max+1), y in 1:(cols-y_max+1)
+            if can_place(board, R, x, y)
+                place!(board, R, x, y)
                 pieces[idx] = (A, count - 1)
-                if can_place_in_board(board, pieces, cols, rows, idx)
-                    return true
-                end
-                pieces[idx] = (A, count)
 
-                remove!(board, R, r, c)
+                can_place_in_board(board, pieces, idx) && return true
+
+                pieces[idx] = (A, count)
+                remove!(board, R, x, y)
             end
         end
     end
@@ -114,7 +113,7 @@ function part1(pieces, cols, rows)
 
     board = zeros(Int, rows, cols)
 
-    return can_place_in_board(board, pieces, cols, rows, 1)
+    return can_place_in_board(board, pieces, 1)
 end
 
 function main()
