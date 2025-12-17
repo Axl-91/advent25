@@ -5,41 +5,52 @@ function calculate_area(int $lenght, int $width): int
     return $lenght * $width;
 }
 
-function solvePart1(string $input): string
+function get_areas(array $points): array
 {
     $pos = 0;
-    $rectangles_areas = [];
+    $rectangle_areas = [];
 
-    $lines = explode("\n", trim($input));
+    foreach ($points as [$x, $y]) {
+        $other_points = array_slice($points, $pos);
 
-    foreach ($lines as $line) {
-        [$x, $y] = array_map('intval', explode(',', $line));
-
-        $new_lines = array_slice($lines, $pos);
-
-        foreach ($new_lines as $new_line) {
-            // echo "Comparing: " . $line . " With " . $new_line . PHP_EOL;
-            [$z, $w] = array_map('intval', explode(',', $new_line));
-
+        foreach ($other_points as [$z, $w]) {
             $length = ($x >= $z) ? $x - $z + 1 : $z - $x + 1;
             $width = ($y >= $w) ? $y - $w + 1 : $w - $y + 1;
-            // echo $length, " ", $width, PHP_EOL;
             $area = calculate_area($length, $width);
-            array_push($rectangles_areas, $area);
-            // echo "Area: " . $area . PHP_EOL;
+            array_push($rectangle_areas, $area);
         }
         $pos++;
     }
+    return $rectangle_areas;
+}
 
-    $max = array_reduce($rectangles_areas, function ($acc, $val) {
+function parse_input(string $input): array
+{
+    $points = [];
+    $lines = explode("\n", trim($input));
+
+    foreach ($lines as $line) {
+        $point = array_map('intval', explode(',', $line));
+        array_push($points, $point);
+    }
+    return $points;
+}
+
+function solve_part1(string $input): string
+{
+    $points = parse_input($input);
+    $rectangle_areas = get_areas($points);
+
+    $max = array_reduce($rectangle_areas, function ($acc, $val) {
         return ($acc > $val ? $acc : $val);
     }, 0);
 
     return $max;
 }
 
-function solvePart2(string $input): string
+function solve_part2(string $input): string
 {
-    $lines = explode("\n", trim($input));
+    $points = parse_input($input);
+
     return "Value";
 }
