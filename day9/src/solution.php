@@ -20,8 +20,22 @@ function calculate_area(int $lenght, int $width): int
 function is_in_borders(array $pointA, array $pointB, array $borders): bool
 {
     if (count($borders) == 0) return true;
-    echo "(" . $pointA[0] . ", " . $pointA[1] . ")" . " | " . "(" . $pointB[0] . "," . $pointB[1] . ")" . PHP_EOL;
-    return false;
+
+    [$x, $y] = $pointA;
+    [$z, $w] = $pointB;
+    [$max_x, $min_x] = [max($x, $z), min($x, $z)];
+    [$max_y, $min_y] = [max($y, $w), min($y, $w)];
+
+    foreach (range($min_x, $max_x) as $pos_x) {
+        $borders_on_x = array_filter($borders, fn($point) => $point[0] == $pos_x);
+        foreach (range($min_y, $max_y) as $pos_y) {
+            $point_bigger_y = array_find($borders_on_x, fn($point) => $pos_y >= $point[1]);
+            $point_lower_y = array_find($borders_on_x, fn($point) => $pos_y <= $point[1]);
+
+            if (empty($point_bigger_y) || empty($point_lower_y)) return false;
+        }
+    }
+    return true;
 }
 
 function get_areas(array $points, array $borders = []): array
@@ -58,13 +72,17 @@ function get_borders(array $points): array
                 $min_value = min($y, $w) + 1;
                 $max_value =  max($y, $w) - 1;
                 foreach (range($min_value, $max_value) as $v) {
-                    array_push($borders, [$x, $v]);
+                    if (empty(array_find($borders, fn($point) => $point[0] == $x && $point[1] == $v))) {
+                        array_push($borders, [$x, $v]);
+                    }
                 }
             } elseif ($y == $w && $x != $z) {
                 $min_value = min($x, $z) + 1;
                 $max_value =  max($x, $z) - 1;
                 foreach (range($min_value, $max_value) as $v) {
-                    array_push($borders, [$v, $y]);
+                    if (empty(array_find($borders, fn($point) => $point[0] == $v && $point[1] == $y))) {
+                        array_push($borders, [$v, $y]);
+                    }
                 }
             }
         }
@@ -89,6 +107,7 @@ function solve_part2(string $input): string
 {
     $points = parse_input($input);
     $borders = get_borders($points);
+    echo "Finished Parsing Borders\n";
 
     $rectangle_areas = get_areas($points, $borders);
 
