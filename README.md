@@ -32,21 +32,28 @@ Yes.
 
 ## Days completed
 
-|    Day    |  Part 1  |  Part 2  | Language |
-| :-------: | :------: | :------: | :------: |
-|     1     |    ✔️    |    ✔️    |    py    |
-|     2     |    ✔️    |    ✔️    |    ts    |
-|     3     |    ✔️    |    ✔️    |    go    |
-|     4     |    ✔️    |    ✔️    |    ex    |
-|     5     |    ✔️    |    ✔️    |    rs    |
-|     6     |    ✔️    |    ✔️    |    cpp   |
-|     7     |    ✔️    |    ✔️    |    zig   |
-|     8     |    ✔️    |    ✔️    |    rb    |
-|     9     |    ✔️    |    ✔️    |    php   |
-|    10     |    ✔️    |    ✔️    |    js    |
-|    11     |    ✔️    |    ✔️    |    nim   |
-|    12     |    ✔️    |    ✔️    |    jl    |
+<div align="center">
 
+|    Day    |  Part 1  |  Part 2  |     Language     |
+| :-------: | :------: | :------: | :--------------: |
+|     1     |    ✔️    |    ✔️    |     python       |
+|     2     |    ✔️    |    ✔️    |     typescript   |
+|     3     |    ✔️    |    ✔️    |     go           |
+|     4     |    ✔️    |    ✔️    |     elixir       |
+|     5     |    ✔️    |    ✔️    |     rust         |
+|     6     |    ✔️    |    ✔️    |     c++          |
+|     7     |    ✔️    |    ✔️    |     zig          |
+|     8     |    ✔️    |    ✔️    |     ruby         |
+|     9     |    ✔️    |    ✔️    |     php          |
+|    10     |    ✔️    |    ✔️    |     javascript   |
+|    11     |    ✔️    |    ✔️    |     nim          |
+|    12     |    ✔️    |    ✔️    |     julia        |
+
+</div>
+
+<p align="center">
+  <img width="583" height="270" alt="Winner" src="https://github.com/user-attachments/assets/4d6262bb-3bdc-4a66-8d95-3453538787a6" />
+</p>
 
 ---
 
