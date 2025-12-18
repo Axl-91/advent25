@@ -12,9 +12,15 @@ function parse_input(string $input): array
     return $points;
 }
 
-function calculate_area(int $lenght, int $width): int
+function calculate_area(array $pointA, array $pointB): int
 {
-    return $lenght * $width;
+    [$x, $y] = $pointA;
+    [$z, $w] = $pointB;
+
+    $length = ($x >= $z) ? $x - $z + 1 : $z - $x + 1;
+    $width = ($y >= $w) ? $y - $w + 1 : $w - $y + 1;
+
+    return $length * $width;
 }
 
 function is_in_borders(array $pointA, array $pointB, array $borders): bool
@@ -58,10 +64,8 @@ function get_max_area(array $points, array $borders = []): array
         $other_points = array_slice($points, $offset);
 
         foreach ($other_points as [$z, $w]) {
-            $length = ($x >= $z) ? $x - $z + 1 : $z - $x + 1;
-            $width = ($y >= $w) ? $y - $w + 1 : $w - $y + 1;
             if (is_in_borders([$x, $y], [$z, $w], $borders)) {
-                $area = calculate_area($length, $width);
+                $area = calculate_area([$x, $y], [$z, $w]);
                 if ($area > $max_area) {
                     $max_points = [[$x, $y], [$z, $w]];
                     $max_area = $area;
@@ -124,45 +128,6 @@ function get_borders(array $points): array
     return $borders;
 }
 
-function decompress_points(array $points, array $compress_point): array
-{
-
-    $xValues = array_unique(array_column($points, 0));
-    $yValues = array_unique(array_column($points, 1));
-    sort($xValues);
-    sort($yValues);
-    $xMap = array_flip(array_values($xValues));
-    $yMap = array_flip(array_values($yValues));
-
-    return [
-        [
-            array_search($compress_point[0][0], $xMap),
-            array_search($compress_point[0][1], $yMap)
-        ],
-        [
-            array_search($compress_point[1][0], $xMap),
-            array_search($compress_point[1][1], $yMap)
-        ],
-    ];
-}
-
-function compress_points(array $points): array
-{
-    $points_compressed = [];
-
-    $xValues = array_unique(array_column($points, 0));
-    $yValues = array_unique(array_column($points, 1));
-    sort($xValues);
-    sort($yValues);
-    $xMap = array_flip(array_values($xValues));
-    $yMap = array_flip(array_values($yValues));
-
-    foreach ($points as [$x, $y]) {
-        array_push($points_compressed, [$xMap[$x], $yMap[$y]]);
-    }
-
-    return $points_compressed;
-}
 
 function solve_part1(string $input): string
 {
@@ -174,23 +139,69 @@ function solve_part1(string $input): string
     return $max_area;
 }
 
+# Create the HashMap of X & Y for compress and decompress values
+function create_compress_map(array $points): array
+{
+    $xValues = array_unique(array_column($points, 0));
+    $yValues = array_unique(array_column($points, 1));
+    sort($xValues);
+    sort($yValues);
+    $xMap = array_flip(array_values($xValues));
+    $yMap = array_flip(array_values($yValues));
+
+    return [$xMap, $yMap];
+}
+
+# Take array of 2d points and compress them to the min value posisble
+# starting by 0 in base of the order of X and Y
+function compress_points(array $points): array
+{
+    $new_points = [];
+
+    [$xMap, $yMap] = create_compress_map($points);
+
+    foreach ($points as [$x, $y]) {
+        array_push($new_points, [$xMap[$x], $yMap[$y]]);
+    }
+
+    return [$new_points, [$xMap, $yMap]];
+}
+
+
+# Decompress the two 2d values in $compressed_points in base of their $decompress_map
+function decompress_points(array $decompress_map, array $compressed_points): array
+{
+    [$xMap, $yMap] = $decompress_map;
+    [[$x, $y], [$z, $w]] = $compressed_points;
+
+    return [
+        [
+            array_search($x, $xMap),
+            array_search($y, $yMap)
+        ],
+        [
+            array_search($z, $xMap),
+            array_search($w, $yMap)
+        ],
+    ];
+}
+
 function solve_part2(string $input): string
 {
+    # Parse input to store array of 2D values
+    # Compress this values to minimize the distances
+    # Create borders array to check validity of area
     $points = parse_input($input);
+    [$new_points, $points_map] = compress_points($points);
+    $borders = get_borders($new_points);
 
-    $compressed_points = compress_points($points);
+    # Get the values that generate the max area
+    # Decompress the values to find the "real" max area
+    [$max_area, $max_point] = get_max_area($new_points, $borders);
+    $max_point = decompress_points($points_map, $max_point);
+    [$pointA, $pointB] = $max_point;
 
-    $borders = get_borders($compressed_points);
-
-    [$max_area, $max_point] = get_max_area($compressed_points, $borders);
-
-    $max_point = decompress_points($points, $max_point);
-
-    [[$x, $y], [$z, $w]] = $max_point;
-
-    $length = ($x >= $z) ? $x - $z + 1 : $z - $x + 1;
-    $width = ($y >= $w) ? $y - $w + 1 : $w - $y + 1;
-    $max_area = calculate_area($length, $width);
+    $max_area = calculate_area($pointA, $pointB);
 
     echo "Max Point: " . json_encode($max_point) . PHP_EOL;
 
