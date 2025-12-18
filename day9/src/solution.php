@@ -12,6 +12,15 @@ function parse_input(string $input): array
     return $points;
 }
 
+
+function array_contains(array $array, array $point)
+{
+    return !empty(array_find(
+        $array,
+        fn($p) => $p[0] == $point[0] && $p[1] == $point[1]
+    ));
+}
+
 function calculate_area(array $pointA, array $pointB): int
 {
     [$x, $y] = $pointA;
@@ -54,35 +63,37 @@ function is_in_borders(array $pointA, array $pointB, array $borders): bool
     return true;
 }
 
-function get_max_area(array $points, array $borders = []): array
+function get_pairs_sorted($points)
 {
-    $max_area = -1;
-    $max_points = [];
-    $offset = 0;
+    $pairs = [];
+    $points_len = count($points);
 
-    foreach ($points as [$x, $y]) {
-        $other_points = array_slice($points, $offset);
-
-        foreach ($other_points as [$z, $w]) {
-            if (is_in_borders([$x, $y], [$z, $w], $borders)) {
-                $area = calculate_area([$x, $y], [$z, $w]);
-                if ($area > $max_area) {
-                    $max_points = [[$x, $y], [$z, $w]];
-                    $max_area = $area;
-                }
-            }
+    for ($i = 0; $i < $points_len; $i++) {
+        for ($j = $i + 1; $j < $points_len; $j++) {
+            $area = calculate_area($points[$i], $points[$j]);
+            $pairs[] = [$points[$i], $points[$j], $area];
         }
-        $offset++;
     }
-    return [$max_area, $max_points];
+
+    usort($pairs, function ($pairA, $pairB) {
+        [[,, $areaA], [,, $areaB]] = [$pairA, $pairB];
+        return $areaB <=> $areaA;
+    });
+
+    return $pairs;
 }
 
-function array_contains(array $array, array $point)
+function get_max_area(array $points, array $borders = []): array
 {
-    return !empty(array_find(
-        $array,
-        fn($p) => $p[0] == $point[0] && $p[1] == $point[1]
-    ));
+    $pair_points = get_pairs_sorted($points);
+
+    foreach ($pair_points as [[$x, $y], [$z, $w], $area]) {
+        if (is_in_borders([$x, $y], [$z, $w], $borders)) {
+            $max_points = [[$x, $y], [$z, $w]];
+            return [$area, $max_points];
+        }
+    }
+    return [-1, []];
 }
 
 function add_borders(array &$borders, array $pointA, array $pointB)
@@ -128,17 +139,6 @@ function get_borders(array $points): array
     return $borders;
 }
 
-
-function solve_part1(string $input): string
-{
-    $points = parse_input($input);
-    [$max_area, $max_point] = get_max_area($points);
-
-    echo "Max Point: " . json_encode($max_point) . PHP_EOL;
-
-    return $max_area;
-}
-
 # Create the HashMap of X & Y for compress and decompress values
 function create_compress_map(array $points): array
 {
@@ -167,7 +167,6 @@ function compress_points(array $points): array
     return [$new_points, [$xMap, $yMap]];
 }
 
-
 # Decompress the two 2d values in $compressed_points in base of their $decompress_map
 function decompress_points(array $decompress_map, array $compressed_points): array
 {
@@ -186,12 +185,23 @@ function decompress_points(array $decompress_map, array $compressed_points): arr
     ];
 }
 
+function solve_part1(string $input): string
+{
+    $points = parse_input($input);
+    [$max_area, $max_point] = get_max_area($points);
+
+    echo "Max Point: " . json_encode($max_point) . PHP_EOL;
+    return $max_area;
+}
+
 function solve_part2(string $input): string
 {
     # Parse input to store array of 2D values
     # Compress this values to minimize the distances
     # Create borders array to check validity of area
     $points = parse_input($input);
+    # TODO: Compresion will be not work as wanted in some cases (Ex: input_test)
+    # Need to find a better way to compress, don't tell the police.
     [$new_points, $points_map] = compress_points($points);
     $borders = get_borders($new_points);
 
@@ -204,6 +214,5 @@ function solve_part2(string $input): string
     $max_area = calculate_area($pointA, $pointB);
 
     echo "Max Point: " . json_encode($max_point) . PHP_EOL;
-
     return $max_area;
 }
