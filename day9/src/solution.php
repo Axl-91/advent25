@@ -32,6 +32,17 @@ function calculate_area(array $pointA, array $pointB): int
     return $length * $width;
 }
 
+function vertices_inside_border(array $borders, array $range_x, array $range_y)
+{
+    [$max_x, $min_x] = $range_x;
+    [$max_y, $min_y] = $range_y;
+
+    # Check if the border gets inside the rectangle formed by (min_x, min_y), (min_x, max_y), (max_x, min_y), (max_x, max_y)
+    $points_inside = array_find($borders, fn($pnt) => ($pnt[0] > $min_x && $pnt[0] < $max_x) && ($pnt[1] > $min_y && $pnt[1] < $max_y));
+
+    return empty($points_inside);
+}
+
 function is_in_borders(array $pointA, array $pointB, array $borders): bool
 {
     if (count($borders) == 0) return true;
@@ -40,6 +51,8 @@ function is_in_borders(array $pointA, array $pointB, array $borders): bool
     [$z, $w] = $pointB;
     [$max_x, $min_x] = [max($x, $z), min($x, $z)];
     [$max_y, $min_y] = [max($y, $w), min($y, $w)];
+
+    if (!vertices_inside_border($borders, [$max_x, $min_x], [$max_y, $min_y])) return false;
 
     foreach (range($min_x, $max_x) as $pos_x) {
         $borders_on_x = array_filter($borders, fn($point) => $point[0] == $pos_x);
