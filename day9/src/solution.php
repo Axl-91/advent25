@@ -43,6 +43,32 @@ function vertices_inside_border(array $borders, array $range_x, array $range_y)
     return empty($points_inside);
 }
 
+function check_all_vertices(array $borders, array $range, int $init_pos, int $end_pos, int $coordinate)
+{
+    [$max, $min] = $range;
+
+    foreach ([$init_pos, $end_pos] as $pos) {
+        for ($i = $min; $i <= $max; $i++) {
+            $point_bigger = array_find($borders, fn($point) => $pos >= $point[$coordinate]);
+            $point_lower = array_find($borders, fn($point) => $pos <= $point[$coordinate]);
+
+            if (empty($point_bigger) || empty($point_lower)) return false;
+        }
+    }
+    return true;
+}
+
+function all_values_inside_borders(array $borders, array $range_x, array $range_y)
+{
+    $x_coord = 0;
+    $y_coord = 1;
+    [$max_x, $min_x] = $range_x;
+    [$max_y, $min_y] = $range_y;
+
+    return check_all_vertices($borders, $range_x, $min_y, $max_y, $y_coord)
+        && check_all_vertices($borders, $range_y, $min_x, $max_x, $x_coord);
+}
+
 function is_in_borders(array $pointA, array $pointB, array $borders): bool
 {
     if (count($borders) == 0) return true;
@@ -54,26 +80,7 @@ function is_in_borders(array $pointA, array $pointB, array $borders): bool
 
     if (!vertices_inside_border($borders, [$max_x, $min_x], [$max_y, $min_y])) return false;
 
-    foreach (range($min_x, $max_x) as $pos_x) {
-        $borders_on_x = array_filter($borders, fn($point) => $point[0] == $pos_x);
-        foreach ([$min_y, $max_y] as $pos_y) {
-            $point_bigger_y = array_find($borders_on_x, fn($point) => $pos_y >= $point[1]);
-            $point_lower_y = array_find($borders_on_x, fn($point) => $pos_y <= $point[1]);
-
-            if (empty($point_bigger_y) || empty($point_lower_y)) return false;
-        }
-    }
-
-    foreach (range($min_y, $max_y) as $pos_y) {
-        $borders_on_y = array_filter($borders, fn($point) => $point[1] == $pos_y);
-        foreach ([$min_x, $max_x] as $pos_x) {
-            $point_bigger_y = array_find($borders_on_y, fn($point) => $pos_x >= $point[0]);
-            $point_lower_y = array_find($borders_on_y, fn($point) => $pos_x <= $point[0]);
-
-            if (empty($point_bigger_y) || empty($point_lower_y)) return false;
-        }
-    }
-    return true;
+    return all_values_inside_borders($borders, [$max_x, $min_x], [$max_y, $min_y]);
 }
 
 function get_pairs_sorted($points)
@@ -169,6 +176,9 @@ function create_compress_map(array $points): array
 # starting by 0 in base of the order of X and Y
 function compress_points(array $points): array
 {
+    # Just to handle case on input_test, will change later...
+    if (count($points) < 50) return [$points, []];
+
     $new_points = [];
 
     [$xMap, $yMap] = create_compress_map($points);
@@ -183,6 +193,9 @@ function compress_points(array $points): array
 # Decompress the two 2d values in $compressed_points in base of their $decompress_map
 function decompress_points(array $decompress_map, array $compressed_points): array
 {
+    # Just to handle case on input_test, will change later...
+    if (count($decompress_map) == 0) return $compressed_points;
+
     [$xMap, $yMap] = $decompress_map;
     [[$x, $y], [$z, $w]] = $compressed_points;
 
