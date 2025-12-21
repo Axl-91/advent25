@@ -14,7 +14,7 @@ function getResultFromRanges(ranges: string[]): number {
   let result = 0;
 
   for (let range of ranges) {
-    let [first, last] = range.split("-")
+    let [first, last] = range.split("-");
     let begin = parseInt(first);
     let end = parseInt(last);
 
@@ -25,19 +25,18 @@ function getResultFromRanges(ranges: string[]): number {
       begin++;
     }
   }
-  return result
+  return result;
 }
 
 async function main() {
   let filePath = path.join(__dirname, "input");
-  let inputFile = await fs.readFile(filePath, "utf-8")
+  let inputFile = await fs.readFile(filePath, "utf-8");
   let ranges = inputFile.trim().split(",");
 
-  let result = getResultFromRanges(ranges)
-  console.log(`Final result: ${result}`)
+  let result = getResultFromRanges(ranges);
+  console.log(`Final result: ${result}`);
 
   return 0;
 }
 
-main()
-
+main();
