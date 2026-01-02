@@ -5,16 +5,17 @@ def main():
     dial = 50
     password = 0
 
-    with open("input", "r") as f:
-        for raw in f:
-            line = raw.strip()
+    with open("input", "r") as fileInput:
+        for line in fileInput:
+            line = line.strip()
             direction = line[0]
             clicks = int(line[1:])
 
             if direction == "L":
                 dial = (dial - clicks) % MAX_DIALS
-            if direction == "R":
+            elif direction == "R":
                 dial = (dial + clicks) % MAX_DIALS
+
             if dial == 0:
                 password += 1
 
